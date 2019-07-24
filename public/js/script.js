@@ -1,57 +1,104 @@
-window.onload = function () {
-	var dds = document.getElementsByTagName('dd');
-	var dl = document.getElementsByTagName('dl')[0];
-	dl.style.transform = "rotateX(-10deg) rotateY(0deg)";
-	for (var i = 0; i < dds.length; i++) {
-		var inverted = document.createElement('div');
-		var inverteds = document.createElement('div');
-		var img = document.createElement('img');
-		img.src = dds[i].getElementsByTagName('img')[0].src;
-		inverted.appendChild(img);
-		inverted.className = 'inverted';
-		inverteds.appendChild(inverted)
-		inverteds.className = 'inverteds';
-		dds[i].appendChild(inverteds);
-	}
-	deal(dds, dds.length - 1);
-	window.onmousedown = function (e) {
-		e = e || window.event;
-		var mouseX = e.clientX, mouseY = e.clientY;
-		var transform = dl.style.transform;
-		var rotateX = transform.substr(transform.indexOf('rotateX(') + 8);
-		var rotateY = transform.substr(transform.indexOf('rotateY(') + 8);
-		rotateX = parseInt(rotateX.substring(0, rotateX.indexOf('deg')));
-		rotateY = parseInt(rotateY.substring(0, rotateY.indexOf('deg')));
-		window.onmousemove = function (e) {
-			e = e || window.event;
-			var x = rotateX - (e.clientY - mouseY);
-			var y = rotateY + (e.clientX - mouseX);
-			if (x > 360 || x < -360)
-				x %= 360;
-			if (y > 360 || y < -360)
-				y %= 360;
-			dl.style.transform = "rotateX(" + x + "deg) rotateY(" + y + "deg)";
-		}
-		window.onmouseup = function () {
-			window.onmousemove = null;
-		}
-	}
-	function deal(dds, n) {
-		var speed = 100;
-		var translateZTerminus = 400;
-		var angle = 360 / dds.length * n;
-		var translateZ = 0;
-		var rotateY = 0;
-		var time = setInterval(function () {
-			translateZ += translateZTerminus / speed * 10;
-			rotateY += angle / speed * 10;
-			dds[n].style.transform = 'rotateY(' + rotateY + 'deg) translateZ(' + translateZ + 'px)';
-			if (rotateY >= angle && translateZ >= translateZTerminus) {
-				clearInterval(time);
-				dds[n].style.transform = 'rotateY(' + angle + 'deg) translateZ(' + translateZTerminus + 'px)';
-				if (n > 0)
-					deal(dds, n - 1);
-			}
-		}, 10);
-	}
+var w = document.documentElement.clientWidth*1.2;
+var h = document.documentElement.clientHeight*1.2;
+var star = document.getElementsByClassName("stars")[0];
+var n = 1000;
+
+function randomNum(m, n) {
+return Math.floor(Math.random() * (n - m + 1) + m);
 }
+var str = '';
+for (var i = 0; i < n; i++) {
+var numX = randomNum(-w, w);
+var numY = randomNum(-h, h);
+var color = 'rgb(' + randomNum(0, 255) + ',' + randomNum(0, 255) + ',' + randomNum(0, 255) + ')';
+str += numX +'px'+' ' + numY+'px'+' '+ color+',';
+}
+str = str.slice(0,-1);
+star.style.boxShadow = str;var oImg = document.getElementsByTagName("img");
+var oWrap = document.getElementById("wrap");
+var nowX, nowY, lastX, lastY, minusX, minusY, roX = -10, roY = 0;
+(function(i){
+var imgLength = oImg.length;
+var deg = 360/imgLength;
+for (; i < imgLength; i++) {
+oImg[i].style.transform = "rotateY(" + deg*i +"deg) translateZ(300px)";
+};
+})(0);
+document.onmousedown = function(e){
+var e = e || window.event;
+
+lastX = e.clientX;
+lastY = e.clientY;
+
+this.onmousemove = function(e){
+var e = e || window.event;
+nowX = e.clientX;
+nowY = e.clientY;
+
+minusX = nowX - lastX;
+minusY = nowY - lastY;
+console.log(minusX,minusY);
+roY += minusX * 0.15;
+roX -= minusY * 0.15;
+
+oWrap.style.transform = 'rotateX(' + roX + 'deg) rotateY(' + roY +'deg)';
+
+lastX = nowX;
+lastY = nowY;
+}
+this.onmouseup = function(){
+this.onmousemove = null;
+timer = setInterval(function(){
+minusX *= 0.95;
+minusY *= 0.95;
+roY += minusX * 0.15;
+roX -= minusY * 0.15;
+oWrap.style.transform = 'rotateX(' + roX + 'deg) rotateY(' + roY +'deg)';
+if(Math.abs(minusX) < 0.1 || Math.abs(minusY) < 0.1){
+clearInterval(timer);
+}
+}, 1000/60);
+}
+};
+
+
+function touchStart(e){
+e.preventDefault();
+var touch = e.touches[0];
+lastX = touch.pageX;
+lastY = touch.pageY;
+}
+function touchMove(e){
+e.preventDefault();
+var touch = e.touches[0];
+nowX = touch.pageX;
+nowY = touch.pageY;
+minusX = nowX - lastX;
+minusY = nowY - lastY;
+console.log(minusX,minusY);
+roY += minusX * 0.2;
+roX -= minusY * 0.15;
+console.log(roY,roX);
+oWrap.style.transform = 'rotateX(' + roX + 'deg) rotateY(' + roY +'deg)';
+
+lastX = nowX;
+lastY = nowY;
+}
+function touchEnd(e){
+e.preventDefault();
+
+timer = setInterval(function(){
+minusX *= 0.95;
+minusY *= 0.95;
+roY += minusX * 0.15;
+roX -= minusY * 0.15;
+oWrap.style.transform = 'rotateX(' + roX + 'deg) rotateY(' + roY +'deg)';
+if(Math.abs(minusX) < 0.1 || Math.abs(minusY) < 0.1){
+clearInterval(timer);
+}
+}, 1000/60);
+}
+
+document.addEventListener('touchstart', touchStart, false);
+document.addEventListener('touchmove', touchMove, false);
+document.addEventListener('touchend', touchEnd, false);
